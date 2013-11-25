@@ -2,5 +2,10 @@
 <resources>
 
     <string name="app_name">SimpleChat</string>
+    <string name="loginButtonName">Entrar</string>
+    <string name="loginUserName">Usuario</string>
+    <string name="passwordName">Contraseña</string>
+    <string name="sendButtonName">Enviar</string>
+    <string name="sendName">Escriba su mensaje</string>
 
 </resources>
