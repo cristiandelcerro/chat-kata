@@ -1,73 +1,56 @@
 package org.ejmc.android.simplechat;
 
-import com.google.gson.Gson;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
-import java.util.Timer;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static org.ejmc.android.simplechat.Message.messageFactory;
 
-public class ChatPresenter extends Timer {
+public class ChatPresenter {
+    final static String server = "http://172.16.100.149:8080/chat-kata/api/chat";
 
-    final static long period = 500;
-    final static String server = "172.16.100.47:8080/chat-kata/api/chat";
     private ChatActivity chatActivity;
-    //private ReceiverTask receiverTask;
+    private ReceiverTimer receiverTimer;
+    private SenderTimer senderTimer;
+    private ConcurrentLinkedQueue<ChatMessage> messagesToSend;
+    private boolean finished;
+    private Handler chatActivityHandler;
+    private ConcurrentLinkedQueue<ChatMessage> messageList;
 
-    public ChatPresenter(ChatActivity chatActivity) {
+    public ChatPresenter(ChatActivity chatActivity, Handler chatActivityHandler, ConcurrentLinkedQueue<ChatMessage> messageList) {
+        this.finished = false;
         this.chatActivity = chatActivity;
-      //  this.receiverTask = new ReceiverTask();
-       // schedule(receiverTask, 0, period);
+        this.chatActivityHandler = chatActivityHandler;
+        this.messageList = messageList;
+
+        messagesToSend = new ConcurrentLinkedQueue<>();
+
+        senderTimer = new SenderTimer(messagesToSend);
+        receiverTimer = new ReceiverTimer(this, messageList);
     }
 
-    public void sendMessage (Message message) {
-        if(!message.getText().equals(""))
-            sendToServer(message);
+    public void sendMessage(ChatMessage message) {
+        if(!message.getMessage().equals(""))
+            messagesToSend.add(message);
     }
 
-    private String messageToJson(Message message) {
-        Gson gson = new Gson();
-        String json = gson.toJson(message);
-        return json;
-    }
-
-    private boolean sendToServer(Message message) {
-        boolean r = false;
-        String json = messageToJson(message);
-
-        try {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost(server);
-            StringEntity stringToSend = new StringEntity(json);
-
-            httppost.setEntity(stringToSend);
-
-            HttpResponse response = httpclient.execute(httppost);
-            r = true;
+    public void receiveMessages(LinkedList<ChatMessage> messagesToPrint) {
+        if (!finished) {
+            Message msg = Message.obtain();
+            Bundle b = new Bundle();
+            b.putSerializable("messagesToPrint", messagesToPrint);
+            msg.setData(b);
+            chatActivityHandler.sendMessage(msg);
         }
-
-        catch (ClientProtocolException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-        return r;
     }
 
-    public void receiveMessages(LinkedList<Message> messages) {
-        chatActivity.addMessages(messages);
+    public void finish() {
+        finished = true;
+        receiverTimer.cancel();
+        senderTimer.cancel();
     }
 }
