@@ -36,6 +36,10 @@ public class SenderTask extends TimerTask {
         String json = messageToJson(messagesToSend.peek());
         HttpClient httpclient = new DefaultHttpClient();
         HttpPost post = new HttpPost(ChatPresenter.server);
+        sendOneMessage(json, httpclient, post);
+    }
+
+    public void sendOneMessage(String json, HttpClient httpclient, HttpPost post) {
         post.setHeader("content-type", "application/json");
 
         try {

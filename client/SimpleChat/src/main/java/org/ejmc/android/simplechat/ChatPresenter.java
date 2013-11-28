@@ -1,17 +1,17 @@
 package org.ejmc.android.simplechat;
 
-import android.os.Bundle;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Message;
 
-import static org.mockito.Mockito.mock;
-
-import java.util.LinkedList;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class ChatPresenter {
-    final static String server = "http://172.16.100.149:8080/chat-kata/api/chat";
+//    public static final String server = "http://172.16.100.149:8080/chat-kata/api/chat";
+    public static final String server = "http://172.16.100.149:8080/chat-kata/api/chat";
+    public static final String savedProperties = "savedProperties";
 
     private ChatActivity chatActivity;
     private ReceiverTimer receiverTimer;
@@ -19,18 +19,20 @@ public class ChatPresenter {
     private ConcurrentLinkedQueue<ChatMessage> messagesToSend;
     private boolean finished;
     private Handler chatActivityHandler;
-    private ConcurrentLinkedQueue<ChatMessage> messageList;
+    private Vector<ChatMessage> messageList;
+    private int lastSeq;
 
-    public ChatPresenter(ChatActivity chatActivity, Handler chatActivityHandler, ConcurrentLinkedQueue<ChatMessage> messageList) {
+    public ChatPresenter(ChatActivity chatActivity, Handler chatActivityHandler, Vector<ChatMessage> messageList) {
         this.finished = false;
         this.chatActivity = chatActivity;
         this.chatActivityHandler = chatActivityHandler;
         this.messageList = messageList;
+        restoreLastSeq();
 
         messagesToSend = new ConcurrentLinkedQueue<>();
 
         senderTimer = new SenderTimer(messagesToSend);
-        receiverTimer = new ReceiverTimer(this, messageList);
+        receiverTimer = new ReceiverTimer(this);
     }
 
     public void sendMessage(ChatMessage message) {
@@ -38,19 +40,39 @@ public class ChatPresenter {
             messagesToSend.add(message);
     }
 
-    public void receiveMessages(LinkedList<ChatMessage> messagesToPrint) {
-        if (!finished) {
-            Message msg = Message.obtain();
-            Bundle b = new Bundle();
-            b.putSerializable("messagesToPrint", messagesToPrint);
-            msg.setData(b);
-            chatActivityHandler.sendMessage(msg);
+    public void receiveMessages(ServerResponse serverResponse) {
+        synchronized (this) {
+            if (finished) return;
+            lastSeq = serverResponse.getNextSeq();
         }
+
+        messageList.addAll(serverResponse.getMessages());
+        Message msg = Message.obtain();
+        chatActivityHandler.sendMessage(msg);
     }
 
     public void finish() {
-        finished = true;
+        synchronized (this) {
+            finished = true;
+        }
+
         receiverTimer.cancel();
         senderTimer.cancel();
+    }
+
+    synchronized int getLastSeq() {
+        return lastSeq;
+    }
+
+    public void saveLastSeq() {
+        SharedPreferences settings = chatActivity.getSharedPreferences(savedProperties, ChatActivity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putInt("lastSeq", lastSeq);
+        editor.commit();
+    }
+
+    private void restoreLastSeq() {
+        SharedPreferences settings = chatActivity.getSharedPreferences(savedProperties, ChatActivity.MODE_PRIVATE);
+        this.lastSeq = settings.getInt("lastSeq", 0);
     }
 }

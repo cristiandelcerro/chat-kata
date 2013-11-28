@@ -2,23 +2,16 @@ package org.ejmc.android.simplechat;
 
 import java.util.LinkedList;
 
-/**
- * Created with IntelliJ IDEA.
- * User: cristianbq
- * Date: 27/11/13
- * Time: 17:54
- * To change this template use File | Settings | File Templates.
- */
 public class ServerResponse {
-    private int last_seq;
+    private int nextSeq;
     private LinkedList<ChatMessage> messages;
 
-    public int getLast_seq() {
-        return last_seq;
+    public int getNextSeq() {
+        return nextSeq;
     }
 
-    public void setLast_seq(int last_seq) {
-        this.last_seq = last_seq;
+    public void setNextSeq(int nextSeq) {
+        this.nextSeq = nextSeq;
     }
 
     public LinkedList<ChatMessage> getMessages() {
