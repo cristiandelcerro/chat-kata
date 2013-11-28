@@ -27,7 +27,7 @@ public class ChatActivity extends ListActivity {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-                ChatActivity.this.addMessages(msg);
+                ChatActivity.this.addMessages();
             }
         };
 
@@ -61,7 +61,7 @@ public class ChatActivity extends ListActivity {
         super.onDestroy();
     }
 
-    public void addMessages(Message msg) {
+    public void addMessages() {
         onContentChanged();
     }
 

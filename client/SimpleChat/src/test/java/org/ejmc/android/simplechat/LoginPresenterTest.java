@@ -18,21 +18,21 @@ public class LoginPresenterTest {
         loginPresenter = new LoginPresenter();
     }
     @Test
-    public void withoutUserAndPasswordNotStartChat() {
+    public void testWithoutUserAndPasswordNotStartChat() {
         assertFalse(loginPresenter.login("", ""));
     }
 
     @Test
-    public void withoutUserNotStartChat() {
+    public void testWithoutUserNotStartChat() {
         assertFalse(loginPresenter.login("", "sadfhkasjf"));
     }
     @Test
-    public void withoutPasswordNotStartChat() {
+    public void testWithoutPasswordNotStartChat() {
         assertFalse(loginPresenter.login("asdfdasf", ""));
     }
 
     @Test
-    public void withtUserAndPasswordStartChat() {
+    public void testWithtUserAndPasswordStartChat() {
         assertTrue(loginPresenter.login("asdfasf", "asdfasfsa"));
     }
 }

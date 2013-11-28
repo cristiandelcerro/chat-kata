@@ -36,7 +36,7 @@ public class ChatPresenter {
     }
 
     public void sendMessage(ChatMessage message) {
-        if(!message.getMessage().equals(""))
+        if(!message.getMessage().equals("") && !message.getNick().equals(""))
             messagesToSend.add(message);
     }
 
@@ -47,8 +47,7 @@ public class ChatPresenter {
         }
 
         messageList.addAll(serverResponse.getMessages());
-        Message msg = Message.obtain();
-        chatActivityHandler.sendMessage(msg);
+        chatActivityHandler.sendMessage(null);
     }
 
     public void finish() {
@@ -74,5 +73,25 @@ public class ChatPresenter {
     private void restoreLastSeq() {
         SharedPreferences settings = chatActivity.getSharedPreferences(savedProperties, ChatActivity.MODE_PRIVATE);
         this.lastSeq = settings.getInt("lastSeq", 0);
+    }
+
+    Vector<ChatMessage> getMessageList() {
+        return messageList;
+    }
+
+    void setMessageList(Vector<ChatMessage> messageList) {
+        this.messageList = messageList;
+    }
+
+    boolean isFinished() {
+        return finished;
+    }
+
+    void setFinished(boolean finished) {
+        this.finished = finished;
+    }
+
+    public ConcurrentLinkedQueue<ChatMessage> getMessagesToSend() {
+        return messagesToSend;
     }
 }

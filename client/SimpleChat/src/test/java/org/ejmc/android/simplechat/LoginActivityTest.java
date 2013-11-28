@@ -38,7 +38,7 @@ public class LoginActivityTest {
     }
 
     @Test
-    public void shouldHaveProperAppName() throws Exception{
+    public void shouldHaveProperAppName() {
         String appName = new LoginActivity().getResources().getString(R.string.app_name);
         assertThat(appName, equalTo("SimpleChat"));
     }
