@@ -2,29 +2,34 @@ package org.ejmc.android.simplechat;
 
 import android.content.SharedPreferences;
 import android.os.Handler;
-import android.os.Message;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Vector;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 public class ChatPresenterTest {
     private ChatPresenter chatPresenter;
+    @Mock
     Vector<ChatMessage> messageList;
+    private ServerResponse mockedServerResponse;
 
     @Before
     public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+
+        String userName = "test";
         ChatActivity mockedChatActivity = mock(ChatActivity.class);
         Handler mockedChatActivityHandler = mock(Handler.class);
-        messageList = new Vector<>();
+
+        mockedServerResponse = mock(ServerResponse.class);
 
         SharedPreferences mockedSettings = mock(SharedPreferences.class);
         when(mockedSettings.getInt("lastSeq", 0)).thenReturn(0);
@@ -32,7 +37,7 @@ public class ChatPresenterTest {
         when(mockedChatActivity.getSharedPreferences(ChatPresenter.savedProperties, ChatActivity.MODE_PRIVATE))
                 .thenReturn(mockedSettings);
 
-        chatPresenter = new ChatPresenter(mockedChatActivity, mockedChatActivityHandler, messageList);
+        chatPresenter = new ChatPresenter(userName, mockedChatActivity, mockedChatActivityHandler, messageList);
     }
 
     @Test
@@ -71,23 +76,14 @@ public class ChatPresenterTest {
 
     @Test
     public void testReceiveMessages() {
-        ServerResponse mockedServerResponse = mock(ServerResponse.class);
-        chatPresenter.receiveMessages(mockedServerResponse);
-        verify(messageList).addAll(mockedServerResponse.getMessages());
-    }
-
-    @Test
-    public void testFinish() {
-
-    }
-
-    @Test
-    public void testGetLastSeq() {
-
-    }
-
-    @Test
-    public void testSaveLastSeq() {
-
+        chatPresenter.setStopped(false);
+        try {
+            chatPresenter.receiveMessages(mockedServerResponse);
+        }
+        catch(RuntimeException e) {
+            System.err.println("El handler da problemas." + e.toString());
+            assertEquals("java.lang.RuntimeException: Stub!", e.toString());
+        }
+        verify(messageList, times(1)).addAll(mockedServerResponse.getMessages());
     }
 }

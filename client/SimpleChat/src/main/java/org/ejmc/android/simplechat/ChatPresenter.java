@@ -2,37 +2,54 @@ package org.ejmc.android.simplechat;
 
 import android.content.SharedPreferences;
 import android.os.Handler;
-import android.os.Message;
 
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class ChatPresenter {
-//    public static final String server = "http://172.16.100.149:8080/chat-kata/api/chat";
-    public static final String server = "http://172.16.100.149:8080/chat-kata/api/chat";
+    public static final String server = "http://172.16.100.87:8080/chat-kata/api/chat";
     public static final String savedProperties = "savedProperties";
 
+    private String userName;
     private ChatActivity chatActivity;
     private ReceiverTimer receiverTimer;
     private SenderTimer senderTimer;
     private ConcurrentLinkedQueue<ChatMessage> messagesToSend;
-    private boolean finished;
+    private boolean stopped;
     private Handler chatActivityHandler;
     private Vector<ChatMessage> messageList;
     private int lastSeq;
 
-    public ChatPresenter(ChatActivity chatActivity, Handler chatActivityHandler, Vector<ChatMessage> messageList) {
-        this.finished = false;
+    public ChatPresenter(String userName, ChatActivity chatActivity, Handler chatActivityHandler, Vector<ChatMessage> messageList) {
+        this.userName = userName;
         this.chatActivity = chatActivity;
         this.chatActivityHandler = chatActivityHandler;
         this.messageList = messageList;
-        restoreLastSeq();
+        stopped = true;
 
         messagesToSend = new ConcurrentLinkedQueue<>();
+    }
 
+    private void createTimers() {
         senderTimer = new SenderTimer(messagesToSend);
         receiverTimer = new ReceiverTimer(this);
+    }
+
+    synchronized void start() {
+        if (!stopped) return;
+        stopped = false;
+
+        restoreLastSeq();
+        createTimers();
+    }
+
+    synchronized void stop() {
+        if (stopped) return;
+        stopped = true;
+
+        destroyTimers();
+        saveLastSeq();
     }
 
     public void sendMessage(ChatMessage message) {
@@ -40,21 +57,17 @@ public class ChatPresenter {
             messagesToSend.add(message);
     }
 
-    public void receiveMessages(ServerResponse serverResponse) {
+    void receiveMessages(ServerResponse serverResponse) {
         synchronized (this) {
-            if (finished) return;
+            if (stopped) return;
             lastSeq = serverResponse.getNextSeq();
         }
 
         messageList.addAll(serverResponse.getMessages());
-        chatActivityHandler.sendMessage(null);
+        chatActivityHandler.sendEmptyMessage(0);
     }
 
-    public void finish() {
-        synchronized (this) {
-            finished = true;
-        }
-
+    private void destroyTimers() {
         receiverTimer.cancel();
         senderTimer.cancel();
     }
@@ -63,32 +76,20 @@ public class ChatPresenter {
         return lastSeq;
     }
 
-    public void saveLastSeq() {
+    private void saveLastSeq() {
         SharedPreferences settings = chatActivity.getSharedPreferences(savedProperties, ChatActivity.MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
-        editor.putInt("lastSeq", lastSeq);
+        editor.putInt(userName, lastSeq);
         editor.commit();
     }
 
     private void restoreLastSeq() {
         SharedPreferences settings = chatActivity.getSharedPreferences(savedProperties, ChatActivity.MODE_PRIVATE);
-        this.lastSeq = settings.getInt("lastSeq", 0);
+        this.lastSeq = settings.getInt(userName, 0);
     }
 
-    Vector<ChatMessage> getMessageList() {
-        return messageList;
-    }
-
-    void setMessageList(Vector<ChatMessage> messageList) {
-        this.messageList = messageList;
-    }
-
-    boolean isFinished() {
-        return finished;
-    }
-
-    void setFinished(boolean finished) {
-        this.finished = finished;
+    synchronized void setStopped(boolean stopped) {
+        this.stopped = stopped;
     }
 
     public ConcurrentLinkedQueue<ChatMessage> getMessagesToSend() {

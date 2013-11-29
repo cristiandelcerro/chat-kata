@@ -32,14 +32,10 @@ public class SenderTask extends TimerTask {
             sendOneMessage();
     }
 
-    public void sendOneMessage() {
+    void sendOneMessage() {
         String json = messageToJson(messagesToSend.peek());
         HttpClient httpclient = new DefaultHttpClient();
         HttpPost post = new HttpPost(ChatPresenter.server);
-        sendOneMessage(json, httpclient, post);
-    }
-
-    public void sendOneMessage(String json, HttpClient httpclient, HttpPost post) {
         post.setHeader("content-type", "application/json");
 
         try {
@@ -53,12 +49,6 @@ public class SenderTask extends TimerTask {
                 messagesToSend.poll();
             else
                 System.err.println("No se ha podido enviar el mensaje, reintentando en la próxima iteración.");
-        }
-
-        catch (ClientProtocolException e) {
-            System.err.println("No se ha podido enviar el mensaje, reintentando en la próxima iteración. " + e.toString());
-        } catch (UnsupportedEncodingException e) {
-            System.err.println("No se ha podido enviar el mensaje, reintentando en la próxima iteración. " + e.toString());
         } catch (IOException e) {
             System.err.println("No se ha podido enviar el mensaje, reintentando en la próxima iteración. " + e.toString());
         }

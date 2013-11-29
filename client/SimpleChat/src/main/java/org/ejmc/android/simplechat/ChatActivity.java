@@ -1,7 +1,6 @@
 package org.ejmc.android.simplechat;
 
 import android.app.ListActivity;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -9,7 +8,6 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListAdapter;
-import android.widget.ListView;
 
 import java.util.Vector;
 
@@ -17,10 +15,17 @@ public class ChatActivity extends ListActivity {
     private ChatPresenter chatPresenter;
     private String userNameChat;
 
+    public ChatActivity() {
+        super();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        if (savedInstanceState == null) return;
+
         Vector<ChatMessage> messageList = new Vector<>();
 
         Handler handler = new Handler() {
@@ -31,12 +36,11 @@ public class ChatActivity extends ListActivity {
             }
         };
 
-        chatPresenter = new ChatPresenter(this, handler, messageList);
-
         Bundle bundle = getIntent().getExtras();
         userNameChat = bundle.getString("userName");
 
-        ListView chatListView = (ListView)findViewById(android.R.id.list);
+        chatPresenter = new ChatPresenter(userNameChat, this, handler, messageList);
+
         ListAdapter listAdapter = new ArrayAdapter<>(
                 this, android.R.layout.simple_list_item_1, messageList);
         setListAdapter(listAdapter);
@@ -50,20 +54,27 @@ public class ChatActivity extends ListActivity {
     }
 
     @Override
-    public void onStop() {
-        chatPresenter.saveLastSeq();
-        super.onStop();
+    public void onStart() {
+        super.onStart();
+        chatPresenter.start();
     }
 
     @Override
-    public void onDestroy() {
-        chatPresenter.finish();
-        super.onDestroy();
+    public void onStop() {
+        chatPresenter.stop();
+        super.onStop();
     }
 
     public void addMessages() {
         onContentChanged();
     }
 
+    void setChatPresenter(ChatPresenter chatPresenter) {
+        this.chatPresenter = chatPresenter;
+    }
+
+    void setUserNameChat(String userNameChat) {
+        this.userNameChat = userNameChat;
+    }
 }
 

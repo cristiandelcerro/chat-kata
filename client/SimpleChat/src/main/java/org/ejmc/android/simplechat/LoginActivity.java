@@ -37,10 +37,9 @@ public class LoginActivity extends Activity {
             startActivity(intent);
         }
 
-
     }
 
-    public void setLoginPresenter(LoginPresenter loginPresenter) {
+    void setLoginPresenter(LoginPresenter loginPresenter) {
         this.loginPresenter = loginPresenter;
     }
 }

@@ -1,8 +1,6 @@
 package org.ejmc.android.simplechat;
 
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ReceiverTimer extends Timer {
     final static long period = 1500;
