@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class ChatPresenter {
-    public static final String server = "http://172.16.100.87:8080/chat-kata/api/chat";
+    public static final String server = "http://172.16.100.73:8080/chat-kata/api/chat";
     public static final String savedProperties = "savedProperties";
 
     private String userName;

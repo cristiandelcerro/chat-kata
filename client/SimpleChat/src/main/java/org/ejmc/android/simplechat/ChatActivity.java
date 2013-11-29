@@ -14,9 +14,16 @@ import java.util.Vector;
 public class ChatActivity extends ListActivity {
     private ChatPresenter chatPresenter;
     private String userNameChat;
+    private boolean testing;
 
     public ChatActivity() {
         super();
+        this.testing = false;
+    }
+
+    public ChatActivity(boolean testing) {
+        super();
+        this.testing = testing;
     }
 
     @Override
@@ -24,7 +31,7 @@ public class ChatActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        if (savedInstanceState == null) return;
+        if (testing) return;
 
         Vector<ChatMessage> messageList = new Vector<>();
 

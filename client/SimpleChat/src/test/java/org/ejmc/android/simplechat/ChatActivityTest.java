@@ -14,12 +14,12 @@ import static org.mockito.Mockito.*;
 public class ChatActivityTest {
 
     private ChatActivity chatActivity;
-    Button sendButton;
-    EditText textViewToSend;
+    private Button sendButton;
+    private EditText textViewToSend;
 
     @Before
     public void setUp() {
-        chatActivity = new ChatActivity();
+        chatActivity = new ChatActivity(true);
         chatActivity.onCreate(null);
 
         sendButton = (Button)chatActivity.findViewById(R.id.sendButton);
