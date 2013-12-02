@@ -15,7 +15,6 @@ public class ChatPresenter {
     private ChatActivity chatActivity;
     private ReceiverTimer receiverTimer;
     private SenderThread senderThread;
-    private ConcurrentLinkedQueue<ChatMessage> messagesToSend;
     private boolean stopped;
     private Handler chatActivityHandler;
     private Vector<ChatMessage> messageList;
@@ -27,12 +26,10 @@ public class ChatPresenter {
         this.chatActivityHandler = chatActivityHandler;
         this.messageList = messageList;
         stopped = true;
-
-        messagesToSend = new ConcurrentLinkedQueue<>();
     }
 
     private void createTimers() {
-        senderThread = new SenderThread(messagesToSend);
+        senderThread = new SenderThread();
         senderThread.start();
         receiverTimer = new ReceiverTimer(this);
     }
@@ -102,7 +99,15 @@ public class ChatPresenter {
         this.stopped = stopped;
     }
 
-    public ConcurrentLinkedQueue<ChatMessage> getMessagesToSend() {
-        return messagesToSend;
+    void setReceiverTimer(ReceiverTimer receiverTimer) {
+        this.receiverTimer = receiverTimer;
+    }
+
+    SenderThread getSenderThread() {
+        return senderThread;
+    }
+
+    void setSenderThread(SenderThread senderThread) {
+        this.senderThread = senderThread;
     }
 }

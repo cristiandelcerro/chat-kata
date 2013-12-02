@@ -38,40 +38,56 @@ public class ChatPresenterTest {
                 .thenReturn(mockedSettings);
 
         chatPresenter = new ChatPresenter(userName, mockedChatActivity, mockedChatActivityHandler, messageList);
+
+        chatPresenter.setReceiverTimer(mock(ReceiverTimer.class));
+        chatPresenter.setSenderThread(mock(SenderThread.class));
+    }
+
+//    @Test
+//    public void testSendMessage() {
+//        LinkedList<ChatMessage> messagesToTest = new LinkedList<>();
+//        LinkedList<Integer> expectedResults = new LinkedList<>();
+//
+//        messagesToTest.add(ChatMessage.messageFactory("Genaro", "asdf")); expectedResults.add(1);
+//        messagesToTest.add(ChatMessage.messageFactory("", "asdf")); expectedResults.add(0);
+//        messagesToTest.add(ChatMessage.messageFactory("Genaro", "")); expectedResults.add(0);
+//
+//        Iterator<ChatMessage> it1 = messagesToTest.iterator();
+//        Iterator<Integer> it2 = expectedResults.iterator();
+//
+//        assertMessagesToSendSizeEqualsTo(it1, it2);
+//    }
+//
+//    private void assertMessagesToSendSizeEqualsTo(Iterator<ChatMessage> it1, Iterator<Integer> it2) {
+//        for (int i = 0; it1.hasNext() && it2.hasNext(); ++i) {
+//            try {
+//                ChatMessage currentChatMessage = it1.next();
+//                int currentExpectedResult = it2.next();
+//
+//                verify(chatPresenter.getSenderThread(), times(0)).prepareMessageToSend((ChatMessage)any());
+//                chatPresenter.sendMessage(currentChatMessage);
+//                verify(chatPresenter.getSenderThread(), times(1)).prepareMessageToSend((ChatMessage)any());
+//            }
+//
+//            catch (AssertionError e) {
+//                System.err.println("Error in test " + i);
+//                throw e;
+//            }
+//        }
+//    }
+
+    @Test
+    public void testSendEmptyMessage() {
+        verify(chatPresenter.getSenderThread(), times(0)).prepareMessageToSend((ChatMessage)any());
+        chatPresenter.sendMessage(ChatMessage.messageFactory("", ""));
+        verify(chatPresenter.getSenderThread(), times(0)).prepareMessageToSend((ChatMessage)any());
     }
 
     @Test
     public void testSendMessage() {
-        LinkedList<ChatMessage> messagesToTest = new LinkedList<>();
-        LinkedList<Integer> expectedResults = new LinkedList<>();
-
-        messagesToTest.add(ChatMessage.messageFactory("Genaro", "asdf")); expectedResults.add(1);
-        messagesToTest.add(ChatMessage.messageFactory("", "asdf")); expectedResults.add(0);
-        messagesToTest.add(ChatMessage.messageFactory("Genaro", "")); expectedResults.add(0);
-
-        Iterator<ChatMessage> it1 = messagesToTest.iterator();
-        Iterator<Integer> it2 = expectedResults.iterator();
-
-        assertMessagesToSendSizeEqualsTo(it1, it2);
-    }
-
-    private void assertMessagesToSendSizeEqualsTo(Iterator<ChatMessage> it1, Iterator<Integer> it2) {
-        for (int i = 0; it1.hasNext() && it2.hasNext(); ++i) {
-            try {
-                ChatMessage currentChatMessage = it1.next();
-                int currentExpectedResult = it2.next();
-
-                chatPresenter.getMessagesToSend().clear();
-                assertTrue(chatPresenter.getMessagesToSend().isEmpty());
-                chatPresenter.sendMessage(currentChatMessage);
-                assertEquals(currentExpectedResult, chatPresenter.getMessagesToSend().size());
-            }
-
-            catch (AssertionError e) {
-                System.err.println("Error in test " + i);
-                throw e;
-            }
-        }
+        verify(chatPresenter.getSenderThread(), times(0)).prepareMessageToSend((ChatMessage)any());
+        chatPresenter.sendMessage(ChatMessage.messageFactory("asdf", "asdf"));
+        verify(chatPresenter.getSenderThread(), times(1)).prepareMessageToSend((ChatMessage)any());
     }
 
     @Test

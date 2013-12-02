@@ -9,14 +9,14 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
 
 public class SenderThread extends Thread {
-    private ConcurrentLinkedQueue<ChatMessage> messagesToSend;
+    private LinkedList<ChatMessage> messagesToSend;
     private boolean finished;
 
-    public SenderThread(ConcurrentLinkedQueue<ChatMessage> messagesToSend) {
-        this.messagesToSend = messagesToSend;
+    public SenderThread() {
+        this.messagesToSend = new LinkedList<>();
         this.finished = false;
     }
 
@@ -34,7 +34,7 @@ public class SenderThread extends Thread {
                 if (isFinished())
                     break;
 
-                while (!isFinished() && !messagesToSend.isEmpty())
+                while (!isFinished() && thereAreMessagesToSend())
                     sendOneMessage();
             }
         }
@@ -44,6 +44,10 @@ public class SenderThread extends Thread {
             System.err.println(e.toString());
             finish();
         }
+    }
+
+    private synchronized boolean thereAreMessagesToSend() {
+        return !messagesToSend.isEmpty();
     }
 
     private synchronized void waitEvent() throws InterruptedException {
@@ -61,7 +65,12 @@ public class SenderThread extends Thread {
     }
 
     void sendOneMessage() {
-        String json = messageToJson(messagesToSend.peek());
+        String json;
+
+        synchronized (this) {
+            json = messageToJson(messagesToSend.peek());
+        }
+
         HttpClient httpclient = new DefaultHttpClient();
         HttpPost post = new HttpPost(ChatPresenter.server);
         post.setHeader("content-type", "application/json");
@@ -73,8 +82,12 @@ public class SenderThread extends Thread {
 
             HttpResponse response = httpclient.execute(post);
             String respStr = EntityUtils.toString(response.getEntity());
-            if(response.getStatusLine().getStatusCode() == 200)
-                messagesToSend.poll();
+            if(response.getStatusLine().getStatusCode() == 200) {
+                synchronized (this) {
+                    messagesToSend.poll();
+                }
+            }
+
             else
                 System.err.println("No se ha podido enviar el mensaje, reintentando en la próxima iteración.");
         } catch (IOException e) {
