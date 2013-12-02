@@ -8,13 +8,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class ChatPresenter {
-    public static final String server = "http://172.16.100.73:8080/chat-kata/api/chat";
+    public static final String server = "http://172.16.100.50:8080/chat-kata/api/chat";
     public static final String savedProperties = "savedProperties";
 
     private String userName;
     private ChatActivity chatActivity;
     private ReceiverTimer receiverTimer;
-    private SenderTimer senderTimer;
+    private SenderThread senderThread;
     private ConcurrentLinkedQueue<ChatMessage> messagesToSend;
     private boolean stopped;
     private Handler chatActivityHandler;
@@ -32,7 +32,8 @@ public class ChatPresenter {
     }
 
     private void createTimers() {
-        senderTimer = new SenderTimer(messagesToSend);
+        senderThread = new SenderThread(messagesToSend);
+        senderThread.start();
         receiverTimer = new ReceiverTimer(this);
     }
 
@@ -54,7 +55,7 @@ public class ChatPresenter {
 
     public void sendMessage(ChatMessage message) {
         if(!message.getMessage().equals("") && !message.getNick().equals(""))
-            messagesToSend.add(message);
+            senderThread.prepareMessageToSend(message);
     }
 
     void receiveMessages(ServerResponse serverResponse) {
@@ -68,8 +69,17 @@ public class ChatPresenter {
     }
 
     private void destroyTimers() {
+        senderThread.finish();
         receiverTimer.cancel();
-        senderTimer.cancel();
+
+        try {
+            senderThread.join();
+        }
+
+        catch (InterruptedException e) {
+            System.err.println("El hilo enviador ha terminado mal.");
+            System.err.print(e.toString());
+        }
     }
 
     synchronized int getLastSeq() {

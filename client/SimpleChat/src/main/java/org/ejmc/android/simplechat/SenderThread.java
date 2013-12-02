@@ -2,7 +2,6 @@ package org.ejmc.android.simplechat;
 
 import com.google.gson.Gson;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -10,15 +9,15 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class SenderTask extends TimerTask {
+public class SenderThread extends Thread {
     private ConcurrentLinkedQueue<ChatMessage> messagesToSend;
+    private boolean finished;
 
-    public SenderTask(ConcurrentLinkedQueue<ChatMessage> messagesToSend) {
+    public SenderThread(ConcurrentLinkedQueue<ChatMessage> messagesToSend) {
         this.messagesToSend = messagesToSend;
+        this.finished = false;
     }
 
     private String messageToJson(ChatMessage message) {
@@ -28,8 +27,37 @@ public class SenderTask extends TimerTask {
 
     @Override
     public void run() {
-        while(!messagesToSend.isEmpty())
-            sendOneMessage();
+        try {
+            while (true) {
+                waitEvent();
+
+                if (isFinished())
+                    break;
+
+                while (!isFinished() && !messagesToSend.isEmpty())
+                    sendOneMessage();
+            }
+        }
+
+        catch (InterruptedException e) {
+            System.err.println("El hilo enviador de mensajes ha terminado mal.");
+            System.err.println(e.toString());
+            finish();
+        }
+    }
+
+    private synchronized void waitEvent() throws InterruptedException {
+        while (!finished && messagesToSend.isEmpty())
+            wait();
+    }
+
+    public synchronized boolean isFinished() {
+        return finished;
+    }
+
+    public synchronized void finish() {
+        finished = true;
+        notifyAll();
     }
 
     void sendOneMessage() {
@@ -52,5 +80,10 @@ public class SenderTask extends TimerTask {
         } catch (IOException e) {
             System.err.println("No se ha podido enviar el mensaje, reintentando en la próxima iteración. " + e.toString());
         }
+    }
+
+    public synchronized void prepareMessageToSend(ChatMessage m) {
+        messagesToSend.add(m);
+        notifyAll();
     }
 }

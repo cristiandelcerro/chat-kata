@@ -15,28 +15,38 @@ public class LoginActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         loginPresenter = new LoginPresenter();
     }
 
     public void onLoginButtonClicked(View view) {
-        EditText userNameButton = (EditText)findViewById(R.id.userName);
-        EditText userPasswordButton = (EditText)findViewById(R.id.userPassword);
-        String userName = userNameButton.getText().toString();
-        String userPassword = userPasswordButton.getText().toString();
+        String userName = readEditText(R.id.userName);
+        String userPassword = readEditText(R.id.userPassword);
 
-        if (!loginPresenter.login(userName, userPassword)) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Usuario o contraseña incorrectos.",
-                                         Toast.LENGTH_SHORT);
-            toast.show();
-        }
+        if (!loginPresenter.login(userName, userPassword))
+            viewFailedLoginMessage();
 
-        else {
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("userName", userName);
-            intent.putExtra("userPassword", userPassword);
-            startActivity(intent);
-        }
+        else
+            startChatActivity(userName, userPassword);
 
+    }
+
+    private String readEditText(int id) {
+        EditText editTextToRead = (EditText)findViewById(id);
+        return editTextToRead.getText().toString();
+    }
+
+    private void viewFailedLoginMessage() {
+        Toast toast = Toast.makeText(getApplicationContext(), "Usuario o contraseña incorrectos.",
+                Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    private void startChatActivity(String userName, String userPassword) {
+        Intent intent = new Intent(this, ChatActivity.class);
+        intent.putExtra("userName", userName);
+        intent.putExtra("userPassword", userPassword);
+        startActivity(intent);
     }
 
     void setLoginPresenter(LoginPresenter loginPresenter) {

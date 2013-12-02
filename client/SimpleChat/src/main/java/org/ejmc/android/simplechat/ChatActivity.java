@@ -12,8 +12,10 @@ import android.widget.ListAdapter;
 import java.util.Vector;
 
 public class ChatActivity extends ListActivity {
+    private static Vector<ChatMessage> messageList;
+    private static String userNameChat;
+
     private ChatPresenter chatPresenter;
-    private String userNameChat;
     private boolean testing;
 
     public ChatActivity() {
@@ -33,8 +35,12 @@ public class ChatActivity extends ListActivity {
 
         if (testing) return;
 
-        Vector<ChatMessage> messageList = new Vector<>();
+        Handler handler = createHandler();
+        setUserNameAndMessageList();
+        createChatPresenterAndListAdapter(handler);
+    }
 
+    private Handler createHandler() {
         Handler handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -43,9 +49,20 @@ public class ChatActivity extends ListActivity {
             }
         };
 
-        Bundle bundle = getIntent().getExtras();
-        userNameChat = bundle.getString("userName");
+        return handler;
+    }
 
+    private void setUserNameAndMessageList() {
+        Bundle bundle = getIntent().getExtras();
+        String userNameChat = bundle.getString("userName");
+
+        if (ChatActivity.userNameChat == null || !ChatActivity.userNameChat.equals(userNameChat)) {
+            ChatActivity.userNameChat = userNameChat;
+            messageList = new Vector<>();
+        }
+    }
+
+    private void createChatPresenterAndListAdapter(Handler handler) {
         chatPresenter = new ChatPresenter(userNameChat, this, handler, messageList);
 
         ListAdapter listAdapter = new ArrayAdapter<>(
@@ -61,15 +78,15 @@ public class ChatActivity extends ListActivity {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
         chatPresenter.start();
     }
 
     @Override
-    public void onStop() {
+    public void onPause() {
+        super.onPause();
         chatPresenter.stop();
-        super.onStop();
     }
 
     public void addMessages() {
@@ -81,7 +98,7 @@ public class ChatActivity extends ListActivity {
     }
 
     void setUserNameChat(String userNameChat) {
-        this.userNameChat = userNameChat;
+        ChatActivity.userNameChat = userNameChat;
     }
 }
 
