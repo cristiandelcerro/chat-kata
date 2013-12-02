@@ -1,6 +1,7 @@
 package org.ejmc.android.simplechat;
 
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.os.Handler;
 
 import java.util.Vector;

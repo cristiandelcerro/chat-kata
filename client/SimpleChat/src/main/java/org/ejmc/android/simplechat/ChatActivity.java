@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListAdapter;
+import android.widget.ListView;
 
 import java.util.Vector;
 
@@ -65,13 +66,12 @@ public class ChatActivity extends ListActivity {
     private void createChatPresenterAndListAdapter(Handler handler) {
         chatPresenter = new ChatPresenter(userNameChat, this, handler, messageList);
 
-        ListAdapter listAdapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_list_item_1, messageList);
-        setListAdapter(listAdapter);
+        ChatAdapter chatAdapter = new ChatAdapter(this, R.layout.chat_item, messageList);
+        setListAdapter(chatAdapter);
     }
 
     public void onSendButtonClicked(View view) {
-        EditText textToSend = (EditText)findViewById(R.id.textToSend);
+        EditText textToSend = (EditText) findViewById(R.id.textToSend);
         ChatMessage m = ChatMessage.messageFactory(userNameChat, textToSend.getText().toString());
         chatPresenter.sendMessage(m);
         textToSend.setText("");
